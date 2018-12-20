@@ -1,0 +1,44 @@
+
+service: tfm-cristina # NOTE: update this with your service name
+app: tfm-crireca-app
+tenant: tfmcrireca
+
+provider:
+  name: aws
+  runtime: python3.6
+
+  stage: dev
+  region: us-east-1
+  deploymentBucket:
+    name: '${file(./config.yml):bucket}'
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    pythonBin: py
+
+functions:
+  Consultas:
+    role: '${file(./config.yml):role2}'
+    handler: lambda_functions/handler.handler
+    runtime: python3.6
+    events:
+      - http:
+          path: buckets
+          method: get
+          cors: true
+          integration: lambda
+
+
+
+
+    
+      
+      
+          
+        
+
+
+
