@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+        <title>Oteador</title>
+
+        <!-- Required Stylesheets -->
+        <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
+        <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+
+        <!-- Required scripts -->
+        <script src="https://unpkg.com/vue"></script>
+        <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+        <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+        <script src="js/intro.js" defer></script>
+        <!--<script type = "text/javascript" src = "js/intro.js"></script>-->
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <!-- <script type = "text/javascript" src = "js/vue.js"></script> -->
+        <style lang="scss" scoped>
+            @import "css/variables.scss";
+        </style>
+    </head>
+    <body>
+        <div id="cab">
+            <div>Select an option to monitoring this services</div>
+            <div id="select_option">
+                <select v-model="selected" @change="select()">
+                    <option v-for="option in options" v-bind:value="{ text: option.text, value: option.value}">
+                        {{ option.text }}
+                    </option>
+                </select>
+            </div>
+        </div>
+        <!-- <div id="table"></div> -->
+        <div class="card-body col-12">
+            <table id="tabla" class="striped">
+                <thead>
+                    <tr>
+                        <th v-for="col in columns" v-on:click="sortTable(col)">{{col}}
+                            <div class="arrow" v-if="col == sortColumn" v-bind:class="ascending ? 'arrow_up' : 'arrow_down'"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="row in rows">
+                        <td v-for="col in columns">{{row[col]}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+    </body>
+</html>
