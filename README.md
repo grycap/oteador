@@ -2,7 +2,7 @@
 
 Oteador is a Integrated Serverless Platform for Global AWS Monitoring.
 
-# Introduction
+## Introduction
 
 Oteador is a tool that provides fast cost-effective insights on the use of an AWS services. It consists of:
 
@@ -13,6 +13,7 @@ Oteador is a tool that provides fast cost-effective insights on the use of an AW
 * A Vue.js-based web portal (eventually available in the [cloudtrail-tracker-ui](https://github.com/grycap/cloudtrail-tracker-ui) repository) that queries the REST-based service to visually depict high-level aggregated information concerning the use of resources in AWS by the different users based on the events information. A live site for demo purposes is provided at: [http://cloudtrailtracker.cursocloudaws.net](http://cloudtrailtracker.cursocloudaws.net) accesible with user/password `demo` / `demoDem0!`.
 
 ## Requirements
+
 The following tools/libraries are required:
 
 - The [serverless](https://serverless.com/) framework.
@@ -26,3 +27,13 @@ sudo apt-get install python-pip && pip install --upgrade pip
 npm install -g serverless
 pip install -r requeriments
 ```
+## Local Installation and Deployment on AWS
+
+1. Clone the project with Git or download it:
+
+```sh
+git clone https://github.com/grycap/oteador.git
+cd oteador
+```
+
+
