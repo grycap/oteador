@@ -41,3 +41,9 @@ cd oteador
 * `role2`: The name of the role that permits execute lambda functions.
 * `bucket`: The name of the bucket that stores the event logs coming from Oteador.
 
+3. Deploy CloudTrailTracker with the serverless platform:
+
+```sh
+sls deploy
+```
+
