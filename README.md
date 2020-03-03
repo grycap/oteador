@@ -35,4 +35,9 @@ git clone https://github.com/grycap/oteador.git
 cd oteador
 ```
 
+2. Edit the `config.yml` file and, at least, specify the right values for the following parameters:
+
+* `role1`: The name of the role that permits execute lambda functions.
+* `role2`: The name of the role that permits execute lambda functions.
+* `bucket`: The name of the bucket that stores the event logs coming from Oteador.
 
