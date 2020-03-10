@@ -1,37 +1,36 @@
-
 import os , sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from modules import functions
 
 def handler(event, context):
     
-    if event.get('AllBuckets', None):
+    if event['service'] == "AllBuckets":
         return action("AllBuckets")
 
-    elif event.get('AllInstancesEC2', None):
+    elif event['service'] == 'AllInstancesEC2':
         return action("AllInstancesEC2")
 
-    elif event.get('AllInstancesRDS', None):
+    elif event['service'] == 'AllInstancesRDS':
         return action("AllInstancesRDS")
 
-    elif event.get('InstancesByStateEC2', None):
-        if ('state' in event.get('InstancesByStateEC2')):
-            return action("InstancesByStateEC2",event.get('InstancesByStateEC2').get('state'))
+    elif event['service'] == 'InstancesByStateEC2':
+      if event.get('state'):
+        return action("InstancesByStateEC2",event.get('state'))
 
-    elif event.get('InstancesByStateRDS', None):
-        if ('state' in event.get('InstancesByStateRDS')):
-            return action("InstancesByStateRDS",state=event.get('InstancesByStateRDS').get('state'))
+    elif event['service'] == 'InstancesByStateRDS':
+      if event.get('state'):
+          return action("InstancesByStateRDS",state=event.get('').get('state'))
 
-    elif event.get('ElasticLoadBalancing', None):
+    elif event['service'] == 'ElasticLoadBalancing':
         return action("ElasticLoadBalancing")
 
-    elif event.get('AutoScallingGroups', None):
+    elif event['service'] == 'AutoScallingGroups':
         return action("AutoScallingGroups")
 
-    elif event.get('ElasticIP', None):
+    elif event['service'] == 'ElasticIP':
         return action("ElasticIP")
-
-    else return "No acción"
+    else: 
+        return 'No accion'
  
   
 def action(method, state=None):
@@ -77,11 +76,7 @@ def action(method, state=None):
 
 
 if __name__ == '__main__':
-    event = {
-        'InstancesByStateEC2' : {
-            'state' : 'stopped'
-        }
-    }
-    event = { "AutoScallingGroups": "AutoScallingGroups"}
+    #event = { "service": "InstancesByStateEC2", "state" : "stopped"}
+    event = { "service" : "AllInstancesEC2"}
     res = handler(event, None)
     functions.print_pretty(res)
