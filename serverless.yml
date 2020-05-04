@@ -5,7 +5,7 @@ service: tfm-cristina # NOTE: update this with your service name
 provider:
   name: aws
   runtime: python3.6
-  region: us-east-1
+  region: "${file(./config.yml):region}"
   memorySize: 256
   deploymentBucket:
     name: "${file(./config.yml):bucket}"
@@ -19,7 +19,7 @@ functions:
     runtime: python3.6
     events:
       - http:
-          path: services/{service}
+          path: services/{service}/region/{region}
           method: get
           cors: true
           integration: lambda
@@ -28,10 +28,10 @@ functions:
               querystrings:
                 count: false
             template:
-              application/json: '{"service" : "$input.params(''service'')"}'
+              application/json: '{"service" : "$input.params(''service'')", "region":"$input.params(''region'')"}'
 		
       - http:
-          path: services/{service}/state/{state}
+          path: services/{service}/region/{region}/state/{state}
           method: get
           cors: true
           integration: lambda
@@ -40,4 +40,4 @@ functions:
               querystrings:
                 count: false
             template:
-              application/json: '{"service" : "$input.params(''service'')", "state":"$input.params(''state'')"}'
+              application/json: '{"service" : "$input.params(''service'')", "region":"$input.params(''region'')", "state":"$input.params(''state'')"}'
