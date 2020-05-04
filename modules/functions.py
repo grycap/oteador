@@ -18,7 +18,7 @@ def main( ):
         7.Listado de instancias de db (RDS).
         8.Quit
         """)
-        region = 'us-west-2'
+        region = 'us-east-1'
         ans=input("Elige una opcion: ")
         if ans==1:
             state=raw_input("Estado (running,stopped,..): ")
@@ -146,8 +146,7 @@ def getInfoInstanceRDS(dbinstance):
     return print_instance
 
 def getInfoElasticIP(elasticip):
-
-    if 'InstanceId' in elasticip:
+    if 'InstanceId' in elasticip and elasticip['InstanceId']!='':
         return
     
     if 'PrivateIpAddress' in elasticip:
@@ -160,8 +159,8 @@ def getInfoElasticIP(elasticip):
     else :
         PublicIp=''
 
-    print_instance = { "PrivateIpAddress" : PrivateIpAddress , "PublicIp" : PublicIp}
-    return print_instance
+    print_elasticip = {"PublicIp" : PublicIp, "PrivateIpAddress" : PrivateIpAddress}
+    return print_elasticip
 
 def getInfoAutoScallingGroups(asg):
 
@@ -279,14 +278,23 @@ def getInstancesByStateRDS(region,state):
 
 def getElasticLoadBalancers(region):
     returned = []
-    client = boto3.client('elb',region_name=region)
+
+    clientElb = boto3.client('elb',region_name=region)
+    clientElbv2 = boto3.client('elbv2',region_name=region)
     
     try:
-        response = client.describe_load_balancers()
+        response = clientElb.describe_load_balancers()
+        print_pretty(response)
         list_lb = response['LoadBalancerDescriptions']
         for elb in list_lb:
             returned.append(getInfoElasticLoadBalancer(elb))
-
+        
+        response = clientElbv2.describe_load_balancers()
+        print_pretty(response)
+        list_lbv2 = response['LoadBalancers']
+        for elb in list_lbv2:
+            returned.append(getInfoElasticLoadBalancer(elb))
+        
     except:
         print("An exception occurred")
 
@@ -316,7 +324,7 @@ def getElasticIP(region):
         list_eIP = response['Addresses']
         for eIP in list_eIP:
             temp = getInfoElasticIP(eIP)
-            if (temp): returned.append(json.dumps(temp,default=myconverter))
+            if (temp): returned.append(temp)
     
     except:
         print("An exception occurred")
