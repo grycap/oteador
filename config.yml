@@ -1,3 +1,4 @@
 role1: arn:aws:iam::111111111111:role/your-iam-role
 role2: arn:aws:iam::111111111111:role/your-iam-role
 bucket: your-bucket
+region: your-region

@@ -40,6 +40,8 @@ cd oteador
 * `role1`: The name of the role that permits execute lambda functions.
 * `role2`: The name of the role that permits execute lambda functions.
 * `bucket`: The name of the bucket that stores the event logs coming from Oteador.
+* `region`: The name of the region of used bucket.
+
 
 3. Deploy CloudTrailTracker with the serverless platform:
 
@@ -56,7 +58,7 @@ The REST API provided by the API Gateway endpoint receives the queries. You can 
 Obtain the list of Amazon's S3 buckets are used.
 
 ```sh
-curl --url 'https://api.mysite.com/oteador/AllBuckets'
+curl --url 'https://api.mysite.com/oteador/AllBuckets/region/your-region'
 ```
 
 ### List all instances EC2
@@ -64,7 +66,7 @@ curl --url 'https://api.mysite.com/oteador/AllBuckets'
 Obtain the list of Amazon's EC2 instances are used.
 
 ```sh
-curl --url 'https://api.mysite.com/oteador/AllInstancesEC2'
+curl --url 'https://api.mysite.com/oteador/AllInstancesEC2/region/your-region'
 ```
 
 ### List all instances RDS
@@ -72,7 +74,7 @@ curl --url 'https://api.mysite.com/oteador/AllInstancesEC2'
 Obtain the list of Amazon's RDS instances are used.
 
 ```sh
-curl --url 'https://api.mysite.com/oteador/AllInstancesRDS'
+curl --url 'https://api.mysite.com/oteador/AllInstancesRDS/region/your-region'
 ```
 
 ### List all elastic load balancing
@@ -80,7 +82,7 @@ curl --url 'https://api.mysite.com/oteador/AllInstancesRDS'
 Obtain the list of Elastic Load Balancing are used.
 
 ```sh
-curl --url 'https://api.mysite.com/oteador/ElasticLoadBalancing'
+curl --url 'https://api.mysite.com/oteador/ElasticLoadBalancing/region/your-region'
 ```
 
 ### List all auto scalling groups
@@ -88,8 +90,5 @@ curl --url 'https://api.mysite.com/oteador/ElasticLoadBalancing'
 Obtain the list of Auto Scalling groups are used.
 
 ```sh
-curl --url 'https://api.mysite.com/oteador/AutoScallingGroups'
+curl --url 'https://api.mysite.com/oteador/AutoScallingGroups/region/your-region'
 ```
-
-
-

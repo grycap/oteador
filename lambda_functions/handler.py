@@ -1,66 +1,65 @@
-
 import os , sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from modules import functions
 
 def handler(event, context):
     
-    if event.get('AllBuckets', None):
-        return action("AllBuckets")
+    if event['service'] == "AllBuckets":
+        return action("AllBuckets",event.get('region'))
 
-    elif event.get('AllInstancesEC2', None):
-        return action("AllInstancesEC2")
+    elif event['service'] == 'AllInstancesEC2':
+        return action("AllInstancesEC2",event.get('region'))
 
-    elif event.get('AllInstancesRDS', None):
-        return action("AllInstancesRDS")
+    elif event['service'] == 'AllInstancesRDS':
+        return action("AllInstancesRDS",event.get('region'))
 
-    elif event.get('InstancesByStateEC2', None):
-        if ('state' in event.get('InstancesByStateEC2')):
-            return action("InstancesByStateEC2",event.get('InstancesByStateEC2').get('state'))
+    elif event['service'] == 'InstancesByStateEC2':
+      if event.get('state'):
+        return action("InstancesByStateEC2",event.get('region'),event.get('state'))
 
-    elif event.get('InstancesByStateRDS', None):
-        if ('state' in event.get('InstancesByStateRDS')):
-            return action("InstancesByStateRDS",state=event.get('InstancesByStateRDS').get('state'))
+    elif event['service'] == 'InstancesByStateRDS':
+      if event.get('state'):
+          return action("InstancesByStateRDS",event.get('region'),state=event.get('').get('state'))
 
-    elif event.get('ElasticLoadBalancing', None):
-        return action("ElasticLoadBalancing")
+    elif event['service'] == 'ElasticLoadBalancing':
+        return action("ElasticLoadBalancing",event.get('region'))
 
-    elif event.get('AutoScallingGroups', None):
-        return action("AutoScallingGroups")
+    elif event['service'] == 'AutoScallingGroups':
+        return action("AutoScallingGroups",event.get('region'))
 
-    elif event.get('ElasticIP', None):
-        return action("ElasticIP")
-
-    else return "No acción"
+    elif event['service'] == 'ElasticIP':
+        return action("ElasticIP",event.get('region'))
+    else: 
+        return 'No accion'
  
   
-def action(method, state=None):
+def action(method, region, state=None):
     
     consulta = ""
 
     if method == "AllBuckets":
-        consulta = functions.getBuckets()
+        consulta = functions.getBuckets(region)
 
     elif method == "AllInstancesEC2":
-        consulta = functions.getAllInstancesEC2()
+        consulta = functions.getAllInstancesEC2(region)
 
     elif method == "AllInstancesRDS":
-        consulta = functions.getAllInstancesRDS()
+        consulta = functions.getAllInstancesRDS(region)
 
     elif method == "InstancesByStateEC2":
-        consulta = functions.getInstancesByStateEC2(state)
+        consulta = functions.getInstancesByStateEC2(region,state)
 
     elif method == "InstancesByStateRDS":
-        consulta = functions.getInstancesByStateRDS(state)
+        consulta = functions.getInstancesByStateRDS(region,state)
 
     elif method == "ElasticLoadBalancing":
-        consulta = functions.getElasticLoadBalancing()
+        consulta = functions.getElasticLoadBalancers(region)
 
     elif method == "AutoScallingGroups":
-        consulta = functions.getAutoScallingGroups()
+        consulta = functions.getAutoScallingGroups(region)
 
     elif method == "ElasticIP":
-        consulta = functions.getElasticIP()
+        consulta = functions.getElasticIP(region)
     
     body = {
             "message": "Go Serverless v1.0 ! Your function executed successfully ! ",
@@ -77,11 +76,7 @@ def action(method, state=None):
 
 
 if __name__ == '__main__':
-    event = {
-        'InstancesByStateEC2' : {
-            'state' : 'stopped'
-        }
-    }
-    event = { "AutoScallingGroups": "AutoScallingGroups"}
+    #event = { "service": "InstancesByStateEC2", "state" : "stopped"}
+    event = { "service" : "ElasticIP"}
     res = handler(event, None)
     functions.print_pretty(res)
