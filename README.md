@@ -53,7 +53,7 @@ sls deploy
 
 The REST API provided by the API Gateway endpoint receives the queries. You can query it using `curl` or use web portal [cloudtrail-tracker-ui](https://github.com/grycap/cloudtrail-tracker-ui). Here are some sample commands that use `curl` to query the REST API, assuming the endpoint of the API Gateway is available in `https://api.mysite.com/oteador`:
 
-### List all buckets
+### List all Buckets S3
 
 Obtain the list of Amazon's S3 buckets are used.
 
@@ -61,7 +61,7 @@ Obtain the list of Amazon's S3 buckets are used.
 curl --url 'https://api.mysite.com/oteador/AllBuckets/region/your-region'
 ```
 
-### List all instances EC2
+### List all Instances EC2
 
 Obtain the list of Amazon's EC2 instances are used.
 
@@ -69,7 +69,7 @@ Obtain the list of Amazon's EC2 instances are used.
 curl --url 'https://api.mysite.com/oteador/AllInstancesEC2/region/your-region'
 ```
 
-### List all instances RDS
+### List all Instances RDS
 
 Obtain the list of Amazon's RDS instances are used.
 
@@ -77,7 +77,7 @@ Obtain the list of Amazon's RDS instances are used.
 curl --url 'https://api.mysite.com/oteador/AllInstancesRDS/region/your-region'
 ```
 
-### List all elastic load balancing
+### List all Elastic Load Balancers
 
 Obtain the list of Elastic Load Balancing are used.
 
@@ -85,7 +85,15 @@ Obtain the list of Elastic Load Balancing are used.
 curl --url 'https://api.mysite.com/oteador/ElasticLoadBalancing/region/your-region'
 ```
 
-### List all auto scalling groups
+### List all Auto Scalling Groups
+
+Obtain the list of Auto Scalling Groups are used.
+
+```sh
+curl --url 'https://api.mysite.com/oteador/AutoScallingGroups/region/your-region'
+```
+
+### List all Elastic IPs
 
 Obtain the list of Auto Scalling groups are used.
 
