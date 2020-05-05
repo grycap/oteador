@@ -95,8 +95,8 @@ curl --url 'https://api.mysite.com/oteador/AutoScallingGroups/region/your-region
 
 ### List all Elastic IPs
 
-Obtain the list of Auto Scalling groups are used.
+Obtain the list of Elastic IPs are used.
 
 ```sh
-curl --url 'https://api.mysite.com/oteador/AutoScallingGroups/region/your-region'
+curl --url 'https://api.mysite.com/oteador/ElasticIP/region/your-region'
 ```
