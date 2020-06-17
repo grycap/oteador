@@ -19,6 +19,18 @@ functions:
     runtime: python3.6
     events:
       - http:
+          path: services/region/{region}
+          method: get
+          cors: true
+          integration: lambda
+          request:
+            parameters:
+              querystrings:
+                count: false
+            template:
+              application/json: '{"region":"$input.params(''region'')"}'
+		
+      - http:
           path: services/{service}/region/{region}
           method: get
           cors: true
