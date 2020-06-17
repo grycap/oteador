@@ -3,20 +3,27 @@ import boto3
 from collections import defaultdict
 import pprint
 import datetime
+from pkg_resources import resource_filename
 
 def main( ):
-    
+        
     ans=True
     while ans:
         print("""
         1.Listado de instancias de EC2 segun estado.
         2.Listado de instancias de db (RDS) segun estado.
-        3.Listado de balanceadores de carga.
-        4.Listado de grupos de auto-escalado creados.
-        5.Listado de IPs elasticas (que no esten conectadas a instancias)
-        6.Listado de instancias de EC2.
-        7.Listado de instancias de db (RDS).
-        8.Quit
+        3.Listado de grupos de auto-escalado con desired>0.
+
+        4.Listado de balanceadores de carga.
+        5.Listado de grupos de auto-escalado creados.
+        6.Listado de IPs elasticas (que no esten conectadas a instancias)
+        7.Listado de instancias de EC2.
+        8.Listado de instancias de db (RDS).
+        9.Listado de buckets S3.
+        10.Listado de funciones lambda.
+
+        11.Listado de servicios desplegados.
+        12. Quit
         """)
         region = 'us-east-1'
         ans=input("Elige una opcion: ")
@@ -27,18 +34,24 @@ def main( ):
             state=raw_input("Estado (running,terminated,..): ")
             print_pretty(getInstancesByStateRDS(region,state))
         elif ans==3:
-            print_pretty(getElasticLoadBalancers(region))
+            print_pretty(getAutoScalingGroupsByDesiredCapacity(region))
         elif ans==4:
-            print_pretty(getAutoScallingGroups(region))
+            print_pretty(getElasticLoadBalancers(region))
         elif ans==5:
-            print_pretty(getElasticIP(region))
+            print_pretty(getAutoScalingGroups(region))
         elif ans==6:
-            print_pretty(getAllInstancesEC2(region))
+            print_pretty(getElasticIP(region))
         elif ans==7:
-            print_pretty(getAllInstancesRDS(region))
+            print_pretty(getAllInstancesEC2(region))
         elif ans==8:
-            print_pretty(getBuckets(region))
+            print_pretty(getAllInstancesRDS(region))
         elif ans==9:
+            print_pretty(getBuckets(region))
+        elif ans==10:
+            print_pretty(getLambda(region))
+        elif ans==11:
+            print_pretty(getNumberServices(region))
+        elif ans ==12:
             ans = None
         else:
             print("\n Opcion incorrecta")
@@ -52,7 +65,7 @@ def print_pretty(response):
     pp = pprint.PrettyPrinter()
     pp.pprint(response)
 
-def getInfoInstanceEC2(instance,owner):
+def getInfoInstanceEC2(instance,owner,regionName):
 
     if 'InstanceId' in instance:
         InstanceId=instance['InstanceId']
@@ -84,13 +97,13 @@ def getInfoInstanceEC2(instance,owner):
     else :
         LaunchTime=''
 
-    print_instance = { "Id:" : InstanceId, "Type" : InstanceType , "State" : State, "Private IP" : PrivateIpAddress,"Public IP" : PublicIpAddress, "Launch time" : LaunchTime, "Owner": owner }
+    print_instance = { "Id" : InstanceId, "Type" : InstanceType , "State" : State,
+     "Private IP" : PrivateIpAddress,"Public IP" : PublicIpAddress, "Launch time" : LaunchTime,
+      "Owner": owner, "Region name" : regionName }
     return print_instance
 
-def getInfoElasticLoadBalancer(elb):
+def getInfoElasticLoadBalancer(elb,regionName):
     
-    
-
     if 'LoadBalancerName' in elb:
         LoadBalancerName=elb['LoadBalancerName']
     else:
@@ -111,11 +124,17 @@ def getInfoElasticLoadBalancer(elb):
     else:
         CreatedTime=''
 
-    print_instance = { "LoadBalancerName:" : LoadBalancerName, "DNSName" : DNSName , "State" : State,
-     "CreatedTime" : CreatedTime }
+    if 'Type' in elb:
+        Type=elb['Type']
+    else:
+        Type='classic'
+
+    print_instance = { "LoadBalancerName" : LoadBalancerName, "DNSName" : DNSName , "State" : State,
+     "CreatedTime" : CreatedTime, "Type" : Type, "Region name" : regionName }
+
     return print_instance
 
-def getInfoInstanceRDS(dbinstance):
+def getInfoInstanceRDS(dbinstance,regionName):
 
     if 'DBInstanceIdentifier' in dbinstance:
         DBInstanceIdentifier=dbinstance['DBInstanceIdentifier']
@@ -141,14 +160,28 @@ def getInfoInstanceRDS(dbinstance):
         InstanceCreateTime=json.dumps(dbinstance['InstanceCreateTime'],default = myconverter)
     else :
         InstanceCreateTime=''
+
+    if 'MasterUsername' in dbinstance:
+        MasterUsername=dbinstance['MasterUsername']
+    else:
+        MasterUsername=''
     
-    print_instance = { "DBInstanceIdentifierId:" : DBInstanceIdentifier, "DBInstanceClass" : DBInstanceClass , "DBInstanceStatus" : DBInstanceStatus, "Engine" : Engine, "Intance Create Time" : InstanceCreateTime }
+    print_instance = { "DBInstanceIdentifierId" : DBInstanceIdentifier,
+    "DBInstanceClass" : DBInstanceClass , "DBInstanceStatus" : DBInstanceStatus,
+     "Engine" : Engine, "Intance Create Time" : InstanceCreateTime,
+     "MasterUsername" : MasterUsername, "Region name" : regionName }
     return print_instance
 
-def getInfoElasticIP(elasticip):
+def getInfoElasticIP(elasticip,regionName):
+
     if 'InstanceId' in elasticip and elasticip['InstanceId']!='':
         return
     
+    if 'AllocationId' in elasticip:
+        AllocationId=elasticip['AllocationId']
+    else:
+        AllocationId=''
+
     if 'PrivateIpAddress' in elasticip:
         PrivateIpAddress=elasticip['PrivateIpAddress']
     else :
@@ -159,67 +192,125 @@ def getInfoElasticIP(elasticip):
     else :
         PublicIp=''
 
-    print_elasticip = {"PublicIp" : PublicIp, "PrivateIpAddress" : PrivateIpAddress}
+    print_elasticip = {"PublicIp" : PublicIp, "PrivateIpAddress" : PrivateIpAddress,
+     "Region name" : regionName}
     return print_elasticip
 
-def getInfoAutoScallingGroups(asg):
+def getInfoAutoScalingGroups(asg, regionName):
 
     if 'AutoScalingGroupName' in asg:
         AutoScalingGroupName=asg['AutoScalingGroupName']
+    else:
+        AutoScalingGroupName=''
+
+    if 'DesiredCapacity' in asg:
+        DesiredCapacity=asg['DesiredCapacity']
+    else:
+        DesiredCapacity=''
+
+
+    if 'MinSize' in asg:
+        MinSize=asg['MinSize']
+    else:
+        MinSize=''
+
+    if 'MaxSize' in asg:
+        MaxSize=asg['MaxSize']
+    else:
+        MaxSize=''
 
     if 'AvailabilityZones' in asg:
         AvailabilityZones=asg['AvailabilityZones']
+    else:
+        AvailabilityZones=''
 
     if 'CreatedTime' in asg:
         CreatedTime=json.dumps(asg['CreatedTime'],default = myconverter)
+    else:
+        CreatedTime=''
 
-    if 'Instances' in asg:
-        Instances=asg['Instances']
 
-    print_asg = { "AutoScalingGroupName" : AutoScalingGroupName , "AvailabilityZones" : AvailabilityZones, "CreatedTime" : CreatedTime, "Instances" : Instances }
+    print_asg = { "AutoScalingGroupName" : AutoScalingGroupName , 
+    "AvailabilityZones" : AvailabilityZones, "CreatedTime" : CreatedTime, 
+    "DesiredCapacity" : DesiredCapacity, "MinSize": MinSize, "MaxSize": MaxSize,
+    "Region name" : regionName }
     return print_asg
 
+def getInfoLambda (lamb, regionName):
+
+    if 'FunctionName' in lamb:
+        FunctionName=lamb['FunctionName']
+    else:
+        FunctionName=''
+
+    if 'CodeSize' in lamb:
+        CodeSize=lamb['CodeSize']
+    else:
+        CodeSize=''
+
+
+    if 'LastModified' in lamb:
+        LastModified=lamb['LastModified']
+    else:
+        LastModified=''
+
+    if 'Runtime' in lamb:
+        Runtime=lamb['Runtime']
+    else:
+        Runtime=''
+
+    if 'MemorySize' in lamb:
+        MemorySize=lamb['MemorySize']
+    else:
+        MemorySize=''
+
+    print_lamb = { "FunctionName" : FunctionName , 
+    "CodeSize" : CodeSize, "LastModified" : LastModified,
+    "Runtime" : Runtime, 'MemorySize':MemorySize, "Region name" : regionName }
+    return print_lamb
+
 def getAllInstancesEC2(region):
-    returned = []
-    
-    client = boto3.client('ec2',region_name=region)
+    list_instances = []
+    regionName = get_region_name(region)
+
+    ec2 = boto3.client('ec2',region_name=region)
     try:
-        response = client.describe_instances()
-        reservations = response['Reservations']
-        for reservation in reservations:
-            instances = reservation['Instances']
-            for instance in instances:
+        response = ec2.describe_instances()
+        for reservation in response['Reservations']:
+            for instance in reservation['Instances']:
                 owner = ''
                 if ('Tags' in instance):
                     for tag in instance['Tags']:
                         if 'owner' in tag['Key']:
                             owner = tag['Value']
-                        #print(json.dumps(getInfoInstanceEC2(instance,owner),default = myconverter))
-                returned.append(getInfoInstanceEC2(instance,owner))
+                list_instances.append(getInfoInstanceEC2(instance,owner,regionName))
+
     except:
         print("An exception occurred")
-    return returned     
+
+    return list_instances     
                 
 def getBuckets(region):
-    returned=[]
+    list_buckets = []
     s3 = boto3.resource('s3',region_name=region)
     
     try:
         for bucket in s3.buckets.all():
-            returned.append(bucket.name)
+            list_buckets.append(bucket.name)
+            
     except:
         print("An exception occurred")
     
-    return returned
-
-     
+    return list_buckets
 
 def getInstancesByStateEC2(region,state):
-    returned = []
-    client = boto3.client('ec2',region_name=region)
+    list_instances = []
+    regionName = get_region_name(region)
+
+    ec2 = boto3.client('ec2',region_name=region)
     
     try:
-        response = client.describe_instances(
+        response = ec2.describe_instances(
             Filters=[
             {
                 'Name': 'instance-state-name',
@@ -230,106 +321,165 @@ def getInstancesByStateEC2(region,state):
             ]
         )
         
-        reservations = response['Reservations']
-        for reservation in reservations:
-            instances = reservation['Instances']
-            for instance in instances:
+        for reservation in response['Reservations']:
+            for instance in reservation['Instances']:
                 owner = ''
                 for tag in instance['Tags']:
                     if 'owner' in tag['Key']:
                         owner = tag['Value']
-                        returned.append(getInfoInstanceEC2(instance,owner))
+                        list_instances.append(getInfoInstanceEC2(instance,owner,regionName))
     except:
         print("An exception occurred")
 
-    return returned
+    return list_instances
 
 def getAllInstancesRDS(region):
-    returned = []
-    client = boto3.client('rds',region_name=region)
+    list_databases = []
+    regionName = get_region_name(region)
+
+    rds = boto3.client('rds',region_name=region)
     
     try:
-        response = client.describe_db_instances()
-        dbinstances = response['DBInstances']
-        
-        for dbinstance in dbinstances:
-            print(json.dumps(getInfoInstanceRDS(dbinstance),default = myconverter))
-            returned.append(getInfoInstanceRDS(dbinstance))
+        response = rds.describe_db_instances()
+        for dbinstance in response['DBInstances']:
+            list_databases.append(getInfoInstanceRDS(dbinstance,regionName))
     except:
         print("An exception occurred")
 
-    return returned
+    return list_databases
 
 def getInstancesByStateRDS(region,state):
-    returned = []
-    client = boto3.client('rds',region_name=region)
+    list_databases = []
+    regionName = get_region_name(region)
+
+    rds = boto3.client('rds',region_name=region)
     
     try:
-        response = client.describe_db_instances()
-        dbinstances = response['DBInstances']
-        
-        for dbinstance in dbinstances:
-            if (dbinstance['DBInstanceStatus'] == state): #print(json.dumps(getInfoInstanceRDS(dbinstance),default = myconverter))
-                returned.append(getInfoInstanceRDS(dbinstance))
+        response = rds.describe_db_instances()
+        for dbinstance in response['DBInstances']:
+            if (dbinstance['DBInstanceStatus'] == state):
+                list_databases.append(getInfoInstanceRDS(dbinstance,regionName))
     except:
         print("An exception occurred")
 
-    return returned
+    return list_databases
 
 def getElasticLoadBalancers(region):
-    returned = []
-
-    clientElb = boto3.client('elb',region_name=region)
-    clientElbv2 = boto3.client('elbv2',region_name=region)
+    list_elbalancers = []
+    regionName = get_region_name(region)
+    
+    elb = boto3.client('elb',region_name=region)
+    elbv2 = boto3.client('elbv2',region_name=region)
     
     try:
-        response = clientElb.describe_load_balancers()
-        print_pretty(response)
-        list_lb = response['LoadBalancerDescriptions']
-        for elb in list_lb:
-            returned.append(getInfoElasticLoadBalancer(elb))
+        response = elb.describe_load_balancers()
+        for elbalancer in response['LoadBalancerDescriptions']:
+            list_elbalancers.append(getInfoElasticLoadBalancer(elbalancer,regionName))
         
-        response = clientElbv2.describe_load_balancers()
-        print_pretty(response)
-        list_lbv2 = response['LoadBalancers']
-        for elb in list_lbv2:
-            returned.append(getInfoElasticLoadBalancer(elb))
+        response = elbv2.describe_load_balancers()
+        for elbalancer in response['LoadBalancers']:
+            list_elbalancers.append(getInfoElasticLoadBalancer(elbalancer,regionName))
         
     except:
         print("An exception occurred")
 
-    return returned
+    return list_elbalancers
     
-def getAutoScallingGroups(region):
-    returned = []
-    client = boto3.client('autoscaling',region_name=region)
+def getAutoScalingGroups(region):
+    list_autoscaling = []
+    regionName = get_region_name(region)
+
+    autoscaling = boto3.client('autoscaling',region_name=region)
     
     try:
-        response = client.describe_auto_scaling_groups()
-        list_asg = response['AutoScalingGroups']
-        for asg in list_asg:
-            returned.append(getInfoAutoScallingGroups(asg))
+        response = autoscaling.describe_auto_scaling_groups()
+        for asg in response['AutoScalingGroups']:
+            list_autoscaling.append(getInfoAutoScalingGroups(asg,regionName))
 
     except:
         print("An exception occurred")
 
-    return returned
+    return list_autoscaling
+
+def getAutoScalingGroupsByDesiredCapacity(region):
+    list_autoscaling = []
+    regionName = get_region_name(region)
+
+    autoscaling = boto3.client('autoscaling',region_name=region)
+    
+    try:
+        response = autoscaling.describe_auto_scaling_groups()
+        for asg in response['AutoScalingGroups']:
+            if (int(asg['DesiredCapacity']) > 0 ):
+                list_autoscaling.append(getInfoAutoScalingGroups(asg,regionName))
+
+    except:
+        print("An exception occurred")
+
+    return list_autoscaling
 
 def getElasticIP(region):
-    returned = []
-    client = boto3.client('ec2',region_name=region)
+    list_elasticIP = []
+    regionName = get_region_name(region)
+
+    ec2 = boto3.client('ec2',region_name=region)
 
     try:
-        response = client.describe_addresses()
-        list_eIP = response['Addresses']
-        for eIP in list_eIP:
-            temp = getInfoElasticIP(eIP)
-            if (temp): returned.append(temp)
+        response = ec2.describe_addresses()
+        for eIP in response['Addresses']:
+            temp = getInfoElasticIP(eIP,regionName)
+            if (temp): list_elasticIP.append(temp)
     
     except:
         print("An exception occurred")
 
+    return list_elasticIP
+
+def getLambda(region):
+    list_lambda = []
+    regionName = get_region_name(region)
+
+    Lambda = boto3.client('lambda',region_name=region)
+
+    try:
+        response = Lambda.list_functions() 
+        for fLambda in response['Functions']:
+            list_lambda.append(getInfoLambda(fLambda,regionName))
+    
+    except:
+        print("An exception occurred")
+
+    return list_lambda
+
+def getNumberServices(region):
+    ec2 = getInstancesByStateEC2(region,"running")
+    rds = getInstancesByStateRDS(region,"running")
+    autoscaling = getAutoScalingGroupsByDesiredCapacity(region)
+    elasticIP = getElasticIP(region)
+    elb = getElasticLoadBalancers(region)
+    lamb = getLambda(region)
+
+    returned = {
+        "ec2" : { "number" : len(ec2), "info" : ec2 },
+        "rds" : { "number" : len(rds), "info" : rds },
+        "autoscaling" : { "number" : len(autoscaling), "info" : autoscaling },
+        "elasticIP" : { "number" : len(elasticIP), "info" : elasticIP },
+        "elb" : { "number" : len(elb), "info" : elb },
+        "lamb" : { "number" : len(lamb), "info" : lamb }
+    }
     return returned
+
+def get_region_name(region_code):
+    default_region = 'EU (Ireland)'
+    endpoint_file = resource_filename('botocore', 'data/endpoints.json')
+    try:
+        with open(endpoint_file, 'r') as f:
+            data = json.load(f)
+        return data['partitions'][0]['regions'][region_code]['description']
+    except IOError:
+        return default_region
+
+
 
 if __name__=="__main__":
     main()
