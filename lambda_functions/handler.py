@@ -3,8 +3,11 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from modules import functions
 
 def handler(event, context):
-    
-    if event['service'] == "AllBuckets":
+    if "service" not in event:
+        if event.get('region'):
+            return action("getNumberServices",event.get('region'))
+
+    elif event['service'] == "AllBuckets":
         return action("AllBuckets",event.get('region'))
 
     elif event['service'] == 'AllInstancesEC2':
@@ -24,11 +27,15 @@ def handler(event, context):
     elif event['service'] == 'ElasticLoadBalancing':
         return action("ElasticLoadBalancing",event.get('region'))
 
-    elif event['service'] == 'AutoScallingGroups':
-        return action("AutoScallingGroups",event.get('region'))
+    elif event['service'] == 'AutoScalingGroups':
+        return action("AutoScalingGroups",event.get('region'))
 
     elif event['service'] == 'ElasticIP':
         return action("ElasticIP",event.get('region'))
+
+    elif event['service'] == 'Lambda':
+        return action("Lambda",event.get('region'))
+
     else: 
         return 'No accion'
  
@@ -36,7 +43,9 @@ def handler(event, context):
 def action(method, region, state=None):
     
     consulta = ""
-
+    if method == "getNumberServices":
+        consulta = functions.getNumberServices(region)
+        
     if method == "AllBuckets":
         consulta = functions.getBuckets(region)
 
@@ -55,28 +64,22 @@ def action(method, region, state=None):
     elif method == "ElasticLoadBalancing":
         consulta = functions.getElasticLoadBalancers(region)
 
-    elif method == "AutoScallingGroups":
-        consulta = functions.getAutoScallingGroups(region)
+    elif method == "AutoScalingGroups":
+        consulta = functions.getAutoScalingGroups(region)
 
     elif method == "ElasticIP":
         consulta = functions.getElasticIP(region)
-    
-    body = {
-            "message": "Go Serverless v1.0 ! Your function executed successfully ! ",
-            "input": method,
-            "response" : consulta
-    }
-        
-    response = {
-        "statusCode": 200,
-        "body": body
-    }
+
+    elif method == "Lambda":
+        consulta = functions.getLambda(region)
+           
+    response = consulta
         
     return response
 
 
 if __name__ == '__main__':
     #event = { "service": "InstancesByStateEC2", "state" : "stopped"}
-    event = { "service" : "ElasticIP"}
+    event = { "region" : "us-east-1"}
     res = handler(event, None)
     functions.print_pretty(res)
