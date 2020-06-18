@@ -68,7 +68,7 @@ def action(method, region, state=None):
         consulta = functions.getAutoScalingGroups(region)
 
     elif method == "ElasticIP":
-        consulta = functions.getElasticIP(region)
+        consulta = functions.getElasticIP(region,"false")
 
     elif method == "Lambda":
         consulta = functions.getLambda(region)
