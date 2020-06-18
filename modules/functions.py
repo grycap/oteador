@@ -40,7 +40,7 @@ def main( ):
         elif ans==5:
             print_pretty(getAutoScalingGroups(region))
         elif ans==6:
-            print_pretty(getElasticIP(region))
+            print_pretty(getElasticIP(region,"false"))
         elif ans==7:
             print_pretty(getAllInstancesEC2(region))
         elif ans==8:
@@ -174,9 +174,11 @@ def getInfoInstanceRDS(dbinstance,regionName):
 
 def getInfoElasticIP(elasticip,regionName):
 
-    if 'InstanceId' in elasticip and elasticip['InstanceId']!='':
-        return
-    
+    if 'InstanceId' in elasticip:
+        InstanceId=elasticip['InstanceId']
+    else:
+        InstanceId=''
+   
     if 'AllocationId' in elasticip:
         AllocationId=elasticip['AllocationId']
     else:
@@ -192,7 +194,7 @@ def getInfoElasticIP(elasticip,regionName):
     else :
         PublicIp=''
 
-    print_elasticip = {"PublicIp" : PublicIp, "PrivateIpAddress" : PrivateIpAddress,
+    print_elasticip = { "InstanceId" : InstanceId, "PublicIp" : PublicIp, "PrivateIpAddress" : PrivateIpAddress,
      "Region name" : regionName}
     return print_elasticip
 
@@ -418,7 +420,7 @@ def getAutoScalingGroupsByDesiredCapacity(region):
 
     return list_autoscaling
 
-def getElasticIP(region):
+def getElasticIP(region,isEmpty):
     list_elasticIP = []
     regionName = get_region_name(region)
 
@@ -427,8 +429,10 @@ def getElasticIP(region):
     try:
         response = ec2.describe_addresses()
         for eIP in response['Addresses']:
-            temp = getInfoElasticIP(eIP,regionName)
-            if (temp): list_elasticIP.append(temp)
+            if (isEmpty == "true"):
+                if (eIP['InstanceId'] == ''): list_elasticIP.append(getInfoElasticIP(eIP,regionName))
+            else:
+                list_elasticIP.append(getInfoElasticIP(eIP,regionName))
     
     except:
         print("An exception occurred")
@@ -455,7 +459,7 @@ def getNumberServices(region):
     ec2 = getInstancesByStateEC2(region,"running")
     rds = getInstancesByStateRDS(region,"running")
     autoscaling = getAutoScalingGroupsByDesiredCapacity(region)
-    elasticIP = getElasticIP(region)
+    elasticIP = getElasticIP(region,"true")
     elb = getElasticLoadBalancers(region)
     lamb = getLambda(region)
 
