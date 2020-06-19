@@ -1,6 +1,4 @@
-service: tfm-cristina # NOTE: update this with your service name
-#app: tfm-cristina
-#tenant: tfmcrireca
+service: oteador
 
 provider:
   name: aws
@@ -9,12 +7,12 @@ provider:
   memorySize: 256
   deploymentBucket:
     name: "${file(./config.yml):bucket}"
-  role: "${file(./config.yml):role2}"
+  role: "${file(./config.yml):role}"
   plugins:
     - serverless-python-requirements
 
 functions:
-  Consultas:
+  query:
     handler: lambda_functions/handler.handler
     runtime: python3.6
     events:
