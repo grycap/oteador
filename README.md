@@ -1,17 +1,18 @@
 # Oteador
 
-Oteador is a Integrated Serverless Platform for Global AWS Monitoring.
+Oteador is a serverless platform for monitoring the allocated resources in an AWS account
 
 ## Introduction
 
-Oteador is a tool that provides fast cost-effective insights on the use of an AWS services. It consists of:
+Oteador provides fast cost-effective insights on the use of AWS resources. It consists of:
 
-* A serverless back-end composed of an [AWS Lambda](https://aws.amazon.com/lambda) makes a real-time query of [Amazon AWS](https://aws.amazon.com/es/) services.
+* A serverless back-end composed of an [Amazon API Gateway](https://aws.amazon.com/api-gateway/) REST API that invokes an [AWS Lambda](https://aws.amazon.com/lambda) function that queries the allocated resources from the following [Amazon AWS](https://aws.amazon.com) services: Amazon EC2 (instances, elastic IPs, Auto Scaling groups and load balancers), Amazon S3 (buckets), Amazon RDS (DB instances) and AWS Lambda (functions).
 
-* A REST-based service provided by [Amazon API Gateway](https://aws.amazon.com/api-gateway/) (optionally integrated with [Cognito](https://aws.amazon.com/cognito) to manage authentication).
+* A REST-based service provided by [Amazon API Gateway](https://aws.amazon.com/api-gateway/) (integrated with [Cognito](https://aws.amazon.com/cognito) to manage authentication).
 
-* A Vue.js-based web portal (eventually available in the [cloudtrail-tracker-ui](https://github.com/grycap/cloudtrail-tracker-ui) repository) that queries the REST-based service to visually depict high-level aggregated information concerning the use of resources in AWS by the different users based on the events information. A live site for demo purposes is provided at: [http://cloudtrailtracker.cursocloudaws.net](http://cloudtrailtracker.cursocloudaws.net) accesible with user/password `demo` / `demoDem0!`.
+* A Vue.js-based web portal (integrated in the [cloudtrail-tracker-ui](https://github.com/grycap/cloudtrail-tracker-ui) repository) that queries the REST-based service to visually depict high-level aggregated information concerning the use of resources in AWS by the different users based on the events information. A live site for demo purposes is provided at: [http://cloudtrailtracker.cursocloudaws.net](http://cloudtrailtracker.cursocloudaws.net) accesible with user/password `demo` / `demoDem0!`.
 
+This repository provides the code for the Oteador back-end based on API Gateway and AWS Lambda.
 ## Requirements
 
 The following tools/libraries are required:
@@ -19,12 +20,12 @@ The following tools/libraries are required:
 - The [serverless](https://serverless.com/) framework.
 - The [Boto 3](http://boto3.readthedocs.io/en/latest/) library.
 
-You can install the requirements by issuing on either a GNU/Linux os macOS machine:
+You can install the requirements by issuing the following commands on either a GNU/Linux or macOS machine:
 
 ```sh
 sudo apt-get install python-pip && pip install --upgrade pip
 npm install -g serverless
-pip install -r requeriments
+pip install -r requeriments.txt
 ```
 ## Local Installation and Deployment on AWS
 
@@ -37,16 +38,21 @@ cd oteador
 
 2. Edit the `config.yml` file and, at least, specify the right values for the following parameters:
 
-* `role1`: The name of the role that permits execute lambda functions.
-* `role2`: The name of the role that permits execute lambda functions.
-* `bucket`: The name of the bucket that stores the event logs coming from Oteador.
-* `region`: The name of the region of used bucket.
+* `role`: The ARN of the IAM Role allocated to the created Lambda function.
+* `bucket`: The name of the bucket that will be used for the deployment.
+* `region`: The name of the region where Oteador will be deployed.
 
 
-3. Deploy CloudTrailTracker with the serverless platform:
+3. Deploy oteador with the serverless framework:
 
 ```sh
-sls deploy
+sls deploy --aws-profile another-aws-profile
+```
+
+Notice that if you want to deploy this application with another AWS profile, you should issue:
+
+```sh
+sls deploy 
 ```
 
 ## Using Oteador
