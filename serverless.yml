@@ -4,7 +4,7 @@ provider:
   name: aws
   runtime: python3.6
   region: "${file(./config.yml):region}"
-  memorySize: 256
+  memorySize: 128
   deploymentBucket:
     name: "${file(./config.yml):bucket}"
   role: "${file(./config.yml):role}"
