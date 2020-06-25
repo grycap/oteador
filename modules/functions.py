@@ -274,9 +274,9 @@ def getInfoLambda (lamb, regionName):
 def getAllInstancesEC2(region):
     list_instances = []
     regionName = get_region_name(region)
-
-    ec2 = boto3.client('ec2',region_name=region)
+    
     try:
+        ec2 = boto3.client('ec2',region_name=region)
         response = ec2.describe_instances()
         for reservation in response['Reservations']:
             for instance in reservation['Instances']:
@@ -287,21 +287,20 @@ def getAllInstancesEC2(region):
                             owner = tag['Value']
                 list_instances.append(getInfoInstanceEC2(instance,owner,regionName))
 
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
 
     return list_instances     
                 
 def getBuckets(region):
     list_buckets = []
-    s3 = boto3.resource('s3',region_name=region)
-    
+        
     try:
-        for bucket in s3.buckets.all():
-            list_buckets.append(bucket.name)
+        s3 = boto3.client('s3')
+        response = s3.list_buckets()
+        for bucket in response['Buckets']:
+            list_buckets.append(bucket['Name'])
             
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
     
     return list_buckets
 
@@ -330,8 +329,8 @@ def getInstancesByStateEC2(region,state):
                     if 'owner' in tag['Key']:
                         owner = tag['Value']
                         list_instances.append(getInfoInstanceEC2(instance,owner,regionName))
-    except:
-        print("An exception occurred")
+    
+    except Exception as e: print(e)
 
     return list_instances
 
@@ -345,8 +344,8 @@ def getAllInstancesRDS(region):
         response = rds.describe_db_instances()
         for dbinstance in response['DBInstances']:
             list_databases.append(getInfoInstanceRDS(dbinstance,regionName))
-    except:
-        print("An exception occurred")
+    
+    except Exception as e: print(e)
 
     return list_databases
 
@@ -361,8 +360,8 @@ def getInstancesByStateRDS(region,state):
         for dbinstance in response['DBInstances']:
             if (dbinstance['DBInstanceStatus'] == state):
                 list_databases.append(getInfoInstanceRDS(dbinstance,regionName))
-    except:
-        print("An exception occurred")
+    
+    except Exception as e: print(e)
 
     return list_databases
 
@@ -382,8 +381,7 @@ def getElasticLoadBalancers(region):
         for elbalancer in response['LoadBalancers']:
             list_elbalancers.append(getInfoElasticLoadBalancer(elbalancer,regionName))
         
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
 
     return list_elbalancers
     
@@ -398,8 +396,7 @@ def getAutoScalingGroups(region):
         for asg in response['AutoScalingGroups']:
             list_autoscaling.append(getInfoAutoScalingGroups(asg,regionName))
 
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
 
     return list_autoscaling
 
@@ -415,8 +412,7 @@ def getAutoScalingGroupsByDesiredCapacity(region):
             if (int(asg['DesiredCapacity']) > 0 ):
                 list_autoscaling.append(getInfoAutoScalingGroups(asg,regionName))
 
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
 
     return list_autoscaling
 
@@ -434,8 +430,7 @@ def getElasticIP(region,isEmpty):
             else:
                 list_elasticIP.append(getInfoElasticIP(eIP,regionName))
     
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
 
     return list_elasticIP
 
@@ -450,14 +445,13 @@ def getLambda(region):
         for fLambda in response['Functions']:
             list_lambda.append(getInfoLambda(fLambda,regionName))
     
-    except:
-        print("An exception occurred")
+    except Exception as e: print(e)
 
     return list_lambda
 
 def getNumberServices(region):
     ec2 = getInstancesByStateEC2(region,"running")
-    rds = getInstancesByStateRDS(region,"running")
+    rds = getInstancesByStateRDS(region,"available")
     autoscaling = getAutoScalingGroupsByDesiredCapacity(region)
     elasticIP = getElasticIP(region,"true")
     elb = getElasticLoadBalancers(region)
